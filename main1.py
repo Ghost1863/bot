@@ -2,7 +2,10 @@ import telebot
 from telebot import types
 import webbrowser
 
-bot =telebot.TeleBot('6828222702:AAF_wyVjB69bY2BIFw4KVJnSBQAh57sqYn4')
+import os
+from dotenv import load_dotenv
+load_dotenv()
+bot =telebot.TeleBot(os.getenv('TOKEN'))
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -22,6 +25,10 @@ def on_click(message):
         bot.send_message(message.chat.id,'Site is opened!!!')
     elif message.text=='Delete the photo':
         bot.send_message(message.chat.id, 'Photo is deleted!!!')
+    elif message.text == 'Change the photo':
+        bot.send_message(message.chat.id, 'Photo is changed!!!')
+    bot.register_next_step_handler(message, on_click)
+
 
 @bot.message_handler(commands=['main','hi'])#декораторы
 def main(message):
