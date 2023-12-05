@@ -1,74 +1,10 @@
 import telebot
-import sqlite3
 from telebot import types
 import webbrowser
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-bot =telebot.TeleBot(os.getenv('TOKEN'))
+bot =telebot.TeleBot('6828222702:AAF_wyVjB69bY2BIFw4KVJnSBQAh57sqYn4')
 
 @bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id,"I can execute these commands:\n"
-                                     "/register: put your name and password into data base\n"
-                                     "/hello: something extraordinary\n"
-                                     "/site: open github\n"
-                                     "/help: main command")
-@bot.message_handler(commands=['register'])
-def register(message):
-    connection = sqlite3.connect('base.sql')
-    cur = connection.cursor()
-
-    cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50), pass varchar(50))')
-
-    connection.commit()
-    cur.close()
-    connection.close()
-
-    bot.send_message(message.chat.id, "Hi, to register print your name")
-    bot.register_next_step_handler(message,user_name)
-def user_name(message):
-    global name
-    name=message.text.strip()
-    bot.send_message(message.chat.id, "Print your password")
-    bot.register_next_step_handler(message, user_password)
-
-def user_password(message):
-    password=message.text.strip()
-    connection = sqlite3.connect('base.sql')
-    cur = connection.cursor()
-
-    cur.execute("INSERT INTO users(name,pass) VALUES ('%s','%s')"%(name, password))
-
-    connection.commit()
-    cur.close()
-    connection.close()
-
-    mark_up=telebot.types.InlineKeyboardMarkup()
-    mark_up.add(telebot.types.InlineKeyboardButton('User list', callback_data='users'))
-    bot.send_message(message.chat.id, "You were registered!",reply_markup=mark_up)
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback(call):
-    connection=sqlite3.connect('base.sql')
-    cur=connection.cursor()
-
-    cur.execute('SELECT * FROM users ')
-
-    users=cur.fetchall()
-
-    info =''
-    for el in users:
-       info+= f'Name: {el[1]}, password: {el[2]}\n'
-    cur.close()
-    connection.close()
-
-    bot.send_message(call.message.chat.id, info)
-
-
-@bot.message_handler(commands=['hello'])
 def start(message):
     mark_up= types.ReplyKeyboardMarkup()
     button1 = types.KeyboardButton('Check out this site')
@@ -86,10 +22,6 @@ def on_click(message):
         bot.send_message(message.chat.id,'Site is opened!!!')
     elif message.text=='Delete the photo':
         bot.send_message(message.chat.id, 'Photo is deleted!!!')
-    elif message.text == 'Change the photo':
-        bot.send_message(message.chat.id, 'Photo is changed!!!')
-    bot.register_next_step_handler(message, on_click)
-
 
 @bot.message_handler(commands=['main','hi'])#декораторы
 def main(message):
@@ -103,7 +35,7 @@ def main(message):
 @bot.message_handler()
 def info(message):
     if message.text.lower()=='hi':
-        bot.send_message(message.chat.id,f'Hello {message.from_user.first_name}')
+        bot.send_message(message.chat.id,f'hello {message.from_user.first_name}')
     elif message.text.lower()=='id':
         bot.reply_to(message,f'It is your id {message.from_user.id}')
 
