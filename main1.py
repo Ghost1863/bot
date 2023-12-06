@@ -1,10 +1,67 @@
+import sqlite3
+
 import telebot
 from telebot import types
 import webbrowser
+import sqlite3
+import os
+from dotenv import load_dotenv
 
-bot =telebot.TeleBot('6828222702:AAF_wyVjB69bY2BIFw4KVJnSBQAh57sqYn4')
+load_dotenv()
+bot =telebot.TeleBot(os.getenv('TOKEN'))
 
 @bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id,"I can do these things:\n"
+                                     "/register\n/help\n/hi\n/id\nwatching some photos-_-")
+@bot.message_handler(commands=['register'])
+def register(message):
+    connection=sqlite3.connect('base.sql')
+    cursor=connection.cursor()
+    cursor.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50), password varchar(50))')
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    bot.send_message(message.chat.id, "Hi, print your name to register")
+    bot.register_next_step_handler(message,user_name)
+
+def user_name(message):
+    global name
+    name=message.text.strip()
+    bot.send_message(message.chat.id, "Print your password")
+    bot.register_next_step_handler(message,user_password)
+
+def user_password(message):
+    password = message.text.strip()
+
+    connection = sqlite3.connect('base.sql')
+    cursor = connection.cursor()
+    cursor.execute(f"INSERT INTO users (name,pass) VALUES('%s','%s')"%(name, password))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    mark_up=telebot.types.InlineKeyboardMarkup()
+    mark_up.add(telebot.types.InlineKeyboardButton('User list',callback_data='users'))
+    bot.send_message(message.chat.id, "You are succesfully registered", reply_markup=mark_up)
+
+@bot.callback_query_handler(func=lambda call:True)
+def callbacK(call):
+    connection = sqlite3.connect('base.sql')
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM users')
+    users=cursor.fetchall()
+    info=''
+    for el in users:
+        info+=f'Name:{el[1]}, password: {el[2]}\n'
+    cursor.close()
+    connection.close()
+    bot.send_message(call.message.chat.id,info)
+
+@bot.message_handler(commands=['hello'])
 def start(message):
     mark_up= types.ReplyKeyboardMarkup()
     button1 = types.KeyboardButton('Check out this site')
@@ -22,6 +79,10 @@ def on_click(message):
         bot.send_message(message.chat.id,'Site is opened!!!')
     elif message.text=='Delete the photo':
         bot.send_message(message.chat.id, 'Photo is deleted!!!')
+    elif message.text == 'Change the photo':
+        bot.send_message(message.chat.id, 'Photo is changed!!!')
+    bot.register_next_step_handler(message, on_click)
+
 
 @bot.message_handler(commands=['main','hi'])#декораторы
 def main(message):
